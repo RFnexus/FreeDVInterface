@@ -313,7 +313,7 @@ class FreeDVInterface(Interface):
         self.channel_busy = False
         self.last_sync_time = 0
         self.sync_lock = Lock()
-        self.signal_threshold = float(ifconf.get("signal_threshold", "0.1"))  # 0-1 normalized
+        self.signal_threshold = float(ifconf.get("signal_threshold", "0.35"))  # 0-1 normalized
         self.recent_signal_level = 0.0
 
         # CSMA settings
