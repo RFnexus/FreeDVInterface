@@ -5,44 +5,43 @@ It supports VOX, serial, and Hamilb PTT. The interface also provides highly conf
 
 ⚠ Work in progress
 
-Installation:
+Setup:
 -
-### 1. Install codec2
-https://github.com/drowe67/codec2?tab=readme-ov-file#quickstart
+
+### Raspberry Pi (Zero, 4, 5) / Debian / Ubuntu
 
 
-Debian / Ubuntu 
+1. Build and install codec2:
+```
+sudo apt install git build-essential cmake
+git clone https://github.com/drowe67/codec2
+cd codec2
+mkdir build_linux
+cd build_linux
+cmake ..
+make
+```
 
-TODO
+2. Install pre-requisites 
+```
+sudo apt install portaudio19-dev
+pip install pyaudio OR sudo apt install python-pyaudio 
+pip install numpy OR sudo apt install python-numpy
 
-Raspberry Pi
+```
+3. (Optional) install Hamlib for rigctl PTT support 
+```
+sudo apt install libhamlib-utils
+```
 
-TODO
+4. Move FreeDVInterface.py to the "interfaces" folder in your Reticulum install location  
+```
+mv FreeDVInterface.py ~/.reticlum/interfaces
+```
+5. Add a FreeDVInterface to your Reticulum config 
 
-Windows
+An example config looks like this. Here we are using `rigctld` to key on / off the PTT on a ICOM-7300. 
 
-TODO
-
-Fedora
-
-TODO
-
-### 2. Install Python dependencies 
-
-pip install pyaudio numpy
-
-### 3. (Optional) Install hamlib for rigctl PTT support
-
-
-
-### 4. Add FreeDVInterface.py to your Reticulum "interfaces" folder 
-
-
----
-
-Setup and getting on the air
--
-Example config with an ICOM-7300 and using rigctl over network with rigctld
 ```
 [[FreeDVInterface IC-7300]]
     type = FreeDVInterface
@@ -57,6 +56,18 @@ Example config with an ICOM-7300 and using rigctl over network with rigctld
     hamlib_port = 4532
     csma_enabled = True
 ```
+
+### Windows
+
+`TODO`
+
+### Fedora
+
+`TODO`
+
+---
+
+
 
 ## Troubleshooting
 > I keep seeing "Invalid sample rate"
