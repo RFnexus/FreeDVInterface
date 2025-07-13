@@ -36,7 +36,9 @@ sudo apt install libhamlib-utils
 
 4. Move FreeDVInterface.py to the "interfaces" folder in your Reticulum install location  
 ```
-mv FreeDVInterface.py ~/.reticlum/interfaces
+git clone https://github.com/RFnexus/FreeDVInterface.git
+cd FreeDVInterface
+mv FreeDVInterface.py ~/.reticulum/interfaces
 ```
 5. Add a FreeDVInterface to your Reticulum config 
 
@@ -66,8 +68,6 @@ An example config looks like this. Here we are using `rigctld` to key on / off t
 `TODO`
 
 ---
-
-
 
 ## Troubleshooting
 > I keep seeing "Invalid sample rate"
