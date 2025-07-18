@@ -15,6 +15,7 @@ MODE_DATAC1 = 10
 MODE_DATAC3 = 12
 MODE_DATAC4 = 18
 
+
 class FreeDVData:
     def __init__(self, mode):
         system = platform.system()
@@ -250,12 +251,17 @@ class FreeDVInterface(Interface):
         ifconf = Interface.get_config_obj(configuration)
         self.name = ifconf["name"]
 
+        self.debug = ifconf.get("debug", "false").lower() == "true"
+
         # Get configuration parameters
-        self.input_device = int(ifconf["input_device"]) if "input_device" in ifconf else 0
-        self.output_device = int(ifconf["output_device"]) if "output_device" in ifconf else 0
+        self.input_device_config = ifconf.get("input_device", 0)
+        self.output_device_config = ifconf.get("output_device", 0)
+
+        self.input_device = self.get_device_index(self.input_device_config, is_input=True)
+        self.output_device = self.get_device_index(self.output_device_config, is_input=False)
+
         self.freedv_mode_str = ifconf["freedv_mode"].lower() if "freedv_mode" in ifconf else "datac1"
         self.tx_volume = float(ifconf.get("tx_volume", 100)) / 100.0
-        self.debug = ifconf.get("debug", "false").lower() == "true"
 
         # PTT configuration
         self.ptt_type = ifconf.get("ptt_type", "none").lower()  # none, serial, hamlib, vox
@@ -401,12 +407,70 @@ class FreeDVInterface(Interface):
             RNS.log(f"Could not initialize FreeDV interface [{self.name}]: {e}", RNS.LOG_ERROR)
             raise e
 
+    def get_device_index(self, device_config, is_input=True):
+        if isinstance(device_config, int):
+            return device_config
+
+        try:
+            return int(device_config)
+        except ValueError:
+            pass
+
+        p = pyaudio.PyAudio()
+        device_index = None
+
+        search_name = device_config.lower().strip()
+
+        for i in range(p.get_device_count()):
+            info = p.get_device_info_by_index(i)
+            device_name = info['name'].lower().strip()
+
+            if is_input and info['maxInputChannels'] == 0:
+                continue
+            if not is_input and info['maxOutputChannels'] == 0:
+                continue
+
+            if device_name == search_name:
+                device_index = i
+                break
+
+            # partial match
+            if search_name in device_name:
+                device_index = i
+
+        p.terminate()
+
+        if device_index is None:
+            RNS.log(f"Could not find audio device '{device_config}' for {'input' if is_input else 'output'}",
+                    RNS.LOG_ERROR)
+            RNS.log("Available devices:", RNS.LOG_ERROR)
+            p = pyaudio.PyAudio()
+            for i in range(p.get_device_count()):
+                info = p.get_device_info_by_index(i)
+                if (is_input and info['maxInputChannels'] > 0) or (not is_input and info['maxOutputChannels'] > 0):
+                    RNS.log(f"  {i}: {info['name']}", RNS.LOG_ERROR)
+            p.terminate()
+            raise ValueError(f"Audio device '{device_config}' not found")
+
+        if self.debug:
+            p = pyaudio.PyAudio()
+            info = p.get_device_info_by_index(device_index)
+            RNS.log(
+                f"Found {'input' if is_input else 'output'} device '{device_config}' at index {device_index}: {info['name']}",
+                RNS.LOG_DEBUG)
+            p.terminate()
+
+        return device_index
+
     def init_audio(self):
         self.p = pyaudio.PyAudio()
 
         if self.debug:
             RNS.log(f"Initializing audio for FreeDV [{self.name}]", RNS.LOG_DEBUG)
-            RNS.log(f"Input device: {self.input_device}, Output device: {self.output_device}", RNS.LOG_DEBUG)
+            input_info = self.p.get_device_info_by_index(self.input_device)
+            output_info = self.p.get_device_info_by_index(self.output_device)
+            RNS.log(f"Input device: {self.input_device} ({input_info['name']})", RNS.LOG_DEBUG)
+            RNS.log(f"Output device: {self.output_device} ({output_info['name']})", RNS.LOG_DEBUG)
 
         try:
             # Open audio stream
@@ -857,25 +921,23 @@ if __name__ == "__main__":
         print(f"  Sample Rate: {info['defaultSampleRate']}")
     p.terminate()
 
-    print("\nHamlib radio models")
-    print("-" * 50)
     try:
         result = subprocess.run(["rigctl", "--list"], capture_output=True, text=True)
     except:
         print("rigctl not found - install hamlib for radio control (view README for install instructions)")
 
-    print("\nConfiguration example:")
+    print("\nConfiguration examples:")
     print("-" * 50)
     print("""
 
-  [[FreeDV with IC-7300]]
-    type = FreeDVInterface
-    enabled = yes
-    input_device = 2
-    output_device = 2
-    freedv_mode = datac1
-    ptt_type = hamlib
-    hamlib_model = 3073 # run rigctl -l to list devices
-    hamlib_device = /dev/ttyUSB0
-    hamlib_speed = 19200
-""")
+      [[FreeDV with IC-7300]]
+        type = FreeDVInterface
+        enabled = yes
+        input_device = default
+        output_device = default
+        freedv_mode = datac1
+        ptt_type = hamlib
+        hamlib_model = 3073 # run rigctl -l to list devices
+        hamlib_device = /dev/ttyUSB0
+        hamlib_speed = 19200
+    """)
