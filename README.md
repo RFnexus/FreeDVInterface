@@ -5,6 +5,14 @@ It supports VOX, serial, and Hamilb PTT. The interface also provides highly conf
 
 ⚠ Work in progress
 
+Supported modes:
+
+| Mode name | RF bandwidth (Hz) | Payload data rate bits/s | Payload bytes/frame |
+|-----------|-------------------|--------------------------|---------------------|
+| datac1    | 1700              | 980                      | 510                 |
+
+*From https://github.com/drowe67/codec2/blob/main/README_data.md*
+
 Setup:
 -
 
@@ -48,8 +56,8 @@ An example config looks like this. Here we are using `rigctld` to key on / off t
 [[FreeDVInterface IC-7300]]
     type = FreeDVInterface
     interface_enabled = True
-    input_device = 2
-    output_device = 2
+    input_device = default # String or device number
+    output_device = default # String or device number
     freedv_mode = datac1
     tx_volume = 100
     ptt_type = hamlib
