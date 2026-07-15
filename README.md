@@ -1,3 +1,7 @@
+### 2026:
+This repository is no longer updated. [Check out modem73, a Reticulum first software modem](https://github.com/RFnexus/modem73) with performance in mind. ROBUST-1200, ROBUST 800, and ROBUST-600 have better measured performance than the DATAC1 mode
+https://github.com/RFnexus/modem73
+
 FreeDVInterface 
 -
 This is a CustomInterface for Reticulum that provides a plug and play, cross-platform sound modem interface for HF radios using the FreeDV API.
